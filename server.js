@@ -19,10 +19,10 @@ const Url = mongoose.model('Url', urlSchema);
 
 // create document in DB function
 function createUrlAndSave(hash, url, done) {
-  const url = new Url({_id: hash, originalUrl: url});
+  const urlModel = new Url({_id: hash, originalUrl: url});
 
-  url.save(function(err, savedUrl){
-    if(err) return err;
+  urlModel.save(function(err, savedUrl){
+    if(err) return done(err);
     done(null, savedUrl);
   })
 }
@@ -54,7 +54,9 @@ app.post('/api/shorturl/new', function(req, res){
   
   let hashedUrl = crypto.createHash('md5').update(originalUrl).digest('hex');
 
-  res.json({"original_url": originalUrl, "short_url": hashedUrl});
+  createUrlAndSave(hashedUrl, originalUrl, function(err, data){
+    res.json({"original_url": data.originalUrl, "short_url": data._id});
+  })
   
 })
 
