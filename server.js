@@ -51,30 +51,49 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.post('/api/shorturl/new', function(req, res){
   let originalUrl = req.body.url;
 
-  // dns.lookup(originalUrl, function(err, address){
-  //   console.log(err);
-  //   if(err) {
-  //     res.json({error: 'invalid url'});
-  //   } else {
-  //     res.json({"original_url": originalUrl})
-  //   }
-  // })
+  try{
+    const url = new URL(originalUrl);
+    dns.lookup(url.hostname, function(err){
+      if(err) {
+        res.json({error: 'invalid url'});
+      } else {
+        let hashedUrl = crypto.createHash('md5').update(originalUrl).digest('hex');
+      
+        findUrlById(hashedUrl, function(err, data){
+          if(err){
+            res.json({error: 'unexpected error'});
+            return;
+          }
+          if(data !== null) {
+            res.json({"original_url": data.originalUrl, "short_url": data._id});
+          } else {
+            createUrlAndSave(hashedUrl, originalUrl, function(err, data){
+              if(err){
+                res.json({error: 'unexpected error'});
+                return;
+              }
+              res.json({"original_url": data.originalUrl, "short_url": data._id});
+            })
+          }
+        })
+      }
+    })
+  } catch(error) {
+    res.json({error: 'invalid url'});
+  }
   
-  let hashedUrl = crypto.createHash('md5').update(originalUrl).digest('hex');
-
-  findUrlById(hashedUrl, function(err, data){
-    if(data !== null) {
-      res.json({"original_url": data.originalUrl, "short_url": data._id});
-    } else {
-      createUrlAndSave(hashedUrl, originalUrl, function(err, data){
-    res.json({"original_url": data.originalUrl, "short_url": data._id});
-  })
-    }
-  })
 })
 
 app.get('/api/shorturl/:hashedUrl', function(req, res){
   findUrlById(req.params.hashedUrl, function(err, data){
+    if(err){
+      res.json({error: 'unexpected error'});
+      return;
+    }
+    if(data === null){
+      res.status(404).json({error: "url not found"});
+      return;
+    }
     res.redirect(data.originalUrl);
   })
 })
