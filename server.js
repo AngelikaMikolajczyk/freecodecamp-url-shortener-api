@@ -62,14 +62,21 @@ app.post('/api/shorturl/new', function(req, res){
   
   let hashedUrl = crypto.createHash('md5').update(originalUrl).digest('hex');
 
-  createUrlAndSave(hashedUrl, originalUrl, function(err, data){
+  findUrlById(hashedUrl, function(err, data){
+    if(data !== null) {
+      res.json({"original_url": data.originalUrl, "short_url": data._id});
+    } else {
+      createUrlAndSave(hashedUrl, originalUrl, function(err, data){
     res.json({"original_url": data.originalUrl, "short_url": data._id});
   })
-  
+    }
+  })
 })
 
 app.get('/api/shorturl/:hashedUrl', function(req, res){
-  
+  findUrlById(req.params.hashedUrl, function(err, data){
+    res.redirect(data.originalUrl);
+  })
 })
 
 app.listen(port, function() {
