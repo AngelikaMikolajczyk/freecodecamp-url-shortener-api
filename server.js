@@ -24,9 +24,12 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 app.post('/api/shorturl/new', function(req, res){
   let originalUrl = req.body.url;
-
+  
   try{
     const url = new URL(originalUrl);
+    if(!(url.protocol === "http:" || url.protocol === "https:")){
+      throw new Error();
+    }
     dns.lookup(url.hostname, function(err){
       if(err) {
         res.json({error: 'invalid url'});
