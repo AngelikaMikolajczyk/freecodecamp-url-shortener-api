@@ -5,7 +5,27 @@ const app = express();
 const dns = require('dns');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
+// DB Schema
+mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
+
+const urlSchema = new mongoose.Schema({
+  _id: {type: String, required: true},
+  originalUrl: {type: String, required: true}
+})
+
+const Url = mongoose.model('Url', urlSchema);
+
+// create document in DB function
+function createUrlAndSave(hash, url, done) {
+  const url = new Url({_id: hash, originalUrl: url});
+
+  url.save(function(err, savedUrl){
+    if(err) return err;
+    done(null, savedUrl);
+  })
+}
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
