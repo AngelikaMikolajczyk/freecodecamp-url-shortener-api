@@ -27,6 +27,14 @@ function createUrlAndSave(hash, url, done) {
   })
 }
 
+// Cheched hash url in DB
+function findUrlById(urlId, done) {
+  Url.findById(urlId, function (err, foundUrl){
+    if(err) return done(err);
+    done(null, foundUrl);
+  })
+}
+
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
@@ -57,6 +65,10 @@ app.post('/api/shorturl/new', function(req, res){
   createUrlAndSave(hashedUrl, originalUrl, function(err, data){
     res.json({"original_url": data.originalUrl, "short_url": data._id});
   })
+  
+})
+
+app.get('/api/shorturl/:hashedUrl', function(req, res){
   
 })
 
